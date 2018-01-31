@@ -79,14 +79,14 @@ function ipaddrs {
 	print $IP $white
 }
 
-function date {
+function printdate {
 	DATE=$(date)
 	DATE=${DATE::-9}
 	DATE='"'$DATE'"'
 	echo '{"full_text":'$DATE'}],'
 }
 
-#while [ 1 -lt 2	]; do
+while [ 1 -lt 2	]; do
 	echo "["
 #	if [ ${BATPERC:1:${#BATPERC}-2} -le 15 ] && [ $BATSTAT = "Discharging" ]; then
 #		echo '{"full_text":''"'$BATPERC'"'',"color":"ff0000"},'
@@ -98,5 +98,5 @@ function date {
 	network
 	ipaddrs
 	vpn
-#	date
-#done
+	printdate
+done
