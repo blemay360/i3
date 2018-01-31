@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# Send the header so that i3bar knows we want to use JSON:
+echo '{"version":1}'
+
+# Begin the endless array.
+echo '['
+
+# We send an empty first array of blocks to make the loop simpler:
+echo '[],'
+
+# Now send blocks with information forever:
+	white="#ffffff"
+	green="#00ff00"
+	red="#ff0000"
+	LOCALIP=$(ifconfig wlp1s0 | grep "inet addr")
+	LOCALIP=${LOCALIP%%B*0}
+	LEN=${#LOCALIP}
+	LOCALIP=${LOCALIP:20:$LEN-22}
+	IP=$(wget -qO- http://ipecho.net/plain ; echo)
+
+function print {
+	echo '{"full_text":"'$1'","color":"'$2'"},'
+}
+
+function hexcolor {
+	bat=$1
+#       python -c 'print int(round('$red', 0)), int(round('$green', 0))'
+        red=$(echo 255-$bat*2.55 | bc)
+        green=$(echo $bat*2.55 | bc)
+        green=$(echo "obase=16; ${green%.*}" | bc)
+        red=$(echo "obase=16; ${red%.*}" | bc)
+        if [ ${#red} = 1 ]; then
+                red="0"$red
+        fi
+        if [ ${#green} = 1 ]; then
+                green="0"$green
+	fi
+        hexcolor="#"$red$green"00"
+#       echo $red $green
+}
+
+function batstat {
+	green="#00ff00"
+	red="#ff0000"
+	BATSTAT=$(upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state")
+	BATSTAT=${BATSTAT:25}
+	if [ $BATSTAT = "discharging" ]; then
+		print "Discharging" $red
+	elif [ $BATSTAT = "charging" ]; then
+		print "Charging" $green
+	fi
+	
+}
+
+function batperc {
+	BATPERC=$(upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "percentage")
+	BATPERC=${BATPERC:24}
+	bat=${BATPERC::-1}
+	hexcolor $bat
+	print $BATPERC $hexcolor
+}
+
+function network {
+	NETWORK="$(iwconfig wlp1s0 | grep ESSID:"*")"
+	NETWORK=${NETWORK:30:-3}
+	print $NETWORK $white
+}
+
+function vpn {
+	TUN0=$(ifconfig tun0)
+	if [ ${#TUN0} -gt 100 ]; then
+		echo {'"full_text":"VPN","color":"'$green'"'},
+	fi
+}
+
+function ipaddrs {
+	print $LOCALIP $white
+	print $IP $white
+}
+
+function date {
+	DATE=$(date)
+	DATE=${DATE::-9}
+	DATE='"'$DATE'"'
+	echo '{"full_text":'$DATE'}],'
+}
+
+#while [ 1 -lt 2	]; do
+	echo "["
+#	if [ ${BATPERC:1:${#BATPERC}-2} -le 15 ] && [ $BATSTAT = "Discharging" ]; then
+#		echo '{"full_text":''"'$BATPERC'"'',"color":"ff0000"},'
+#	else
+#		print $BATPERC $white
+#	fi
+	batperc
+	batstat
+	network
+	ipaddrs
+	vpn
+#	date
+#done
