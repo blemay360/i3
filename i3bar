@@ -13,11 +13,14 @@ echo '[],'
 	white="#ffffff"
 	green="#00ff00"
 	red="#ff0000"
+	
+function loadips {
 	LOCALIP=$(ifconfig wlp1s0 | grep "inet addr")
 	LOCALIP=${LOCALIP%%B*0}
 	LEN=${#LOCALIP}
 	LOCALIP=${LOCALIP:20:$LEN-22}
 	IP=$(wget -qO- http://ipecho.net/plain ; echo)
+}
 
 function print {
 	echo '{"full_text":"'$1'","color":"'$2'"},'
@@ -45,8 +48,10 @@ function batstat {
 	red="#ff0000"
 	BATSTAT=$(upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state")
 	BATSTAT=${BATSTAT:25}
-	if [ $BATSTAT = "discharging" ]; then
+	if [ $BATSTAT = "discharging" ] && [ $bat -le 15 ]; then
 		print "Discharging" $red
+	elif [ $BATSTAT = "discharging" ]; then
+		print "Discharging" $white
 	elif [ $BATSTAT = "charging" ]; then
 		print "Charging" $green
 	fi
@@ -64,10 +69,12 @@ function batperc {
 function network {
 	NETWORK="$(iwconfig wlp1s0 | grep ESSID:"*")"
 	NETWORK=${NETWORK:30:-3}
-	print $NETWORK $white
+	print "$NETWORK" $white
 }
 
 function vpn {
+#queries TUN0 to see if a vpn is enabled. If it is, it will give a whole message, otherwise it will give a short error
+#NOTE: should probably change so the error message won't go with the JSON stuff
 	TUN0=$(ifconfig tun0)
 	if [ ${#TUN0} -gt 100 ]; then
 		echo {'"full_text":"VPN","color":"'$green'"'},
@@ -75,28 +82,35 @@ function vpn {
 }
 
 function ipaddrs {
+#only prints out local and global? ip address. Not sure if global is right word, but whatever
 	print $LOCALIP $white
 	print $IP $white
 }
 
 function printdate {
+#retrieves date and prints it out. Only called print date because calling it date made it recursive and crashed stuff
 	DATE=$(date)
 	DATE=${DATE::-9}
 	DATE='"'$DATE'"'
 	echo '{"full_text":'$DATE'}],'
 }
 
-while [ 1 -lt 2	]; do
+function main {	
 	echo "["
-#	if [ ${BATPERC:1:${#BATPERC}-2} -le 15 ] && [ $BATSTAT = "Discharging" ]; then
-#		echo '{"full_text":''"'$BATPERC'"'',"color":"ff0000"},'
-#	else
-#		print $BATPERC $white
-#	fi
+#	print $COUNTER $white
 	batperc
 	batstat
 	network
 	ipaddrs
 	vpn
 	printdate
-done
+	if [ $COUNTER -ge 500 ]; then
+		loadips
+		let COUNTER=0
+	fi
+	let COUNTER=COUNTER+1
+	main
+}
+COUNTER=0
+loadips
+main
