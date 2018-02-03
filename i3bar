@@ -54,6 +54,8 @@ function batstat {
 		print "Discharging" $white
 	elif [ $BATSTAT = "charging" ]; then
 		print "Charging" $green
+	elif [ $BATSTAT = "fully-charged" ]; then
+		print "Charged" $green 
 	fi
 	
 }
