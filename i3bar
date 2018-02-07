@@ -97,9 +97,14 @@ function printdate {
 	echo '{"full_text":'$DATE'}],'
 }
 
+function nextClass {
+	nextClass=$(./.i3/classSchedule.sh)
+	print $nextClass $white
+}
+
 function main {	
 	echo "["
-#	print $COUNTER $white
+	nextClass
 	batperc
 	batstat
 	network

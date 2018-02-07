@@ -1,5 +1,5 @@
 #!/bin/bash
-filename=classSchedule.txt
+filename=~/.i3/classSchedule.txt
 rough=$(cat $filename)
 function makeArray {
 	numClasses=0
@@ -74,7 +74,6 @@ function getDifference {
 	counter=0
 	while [ $counter -le $[classNum] ]; do
 		if [ $(getTime) -lt ${time[$counter]} ]; then
-			#echo ${name[$counter]}
 			echo $[${time[$counter]}-$(getTime)]
 			return
 		fi
