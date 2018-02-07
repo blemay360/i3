@@ -1,58 +1,93 @@
 #!/bin/bash
 filename=classSchedule.txt
-date=$(date)
-while read -r line
-do
-	line="$line"
-	if [ ${date::3} = ${line::3} ]; then
-		rough=$line
-	fi
-done < "$filename"
-rough=${rough:4}
-tmp=${rough##.}
-firstClass=${rough%.*}
-secondClass=${rough#*.}
-IFS=, read -r -a firstClass <<< "$firstClass"
-IFS=, read -r -a secondClass <<< "$secondClass"
-
-tmp=${date%:??' EST'*}
-len=${#tmp}
-time=${tmp:len-6}
-hours=${time:1:2}
-minutes=${time:4}
-time=$[hours*60+minutes]
-
-tmp=$((${firstClass[0]}))
-firstClassHour=${tmp::2}
-firstClassMinute=${tmp:2}
-firstClassTime=$[firstClassHour*60+firstClassMinute]
-
-tmp=$((${secondClass[0]}))
-secondClassHour=${tmp::2}
-secondClassMinute=${tmp:2}
-secondClassTime=$[secondClassHour*60+secondClassMinute]
-
-function nextClass {
-	if [ $time -lt $firstClassTime ]; then
-		nextClass=${firstClass[1]}
-		nextTime=${firstClassTime}
-	elif [ $time -gt $firstClassTime ] && [ $time -lt $secondClassTime ]; then
-		nextClass=${secondClass[1]}
-		nextTime=${secondClassTime}
-	else
-		nextClass="error in nextClass"
-		nextTime="error in nextClass"
-	fi
+rough=$(cat $filename)
+function makeArray {
+	numClasses=0
+	while [ ${#rough} -gt 1 ]; do
+		class[$numClasses]=${rough%%=*}
+		rough=${rough#*=}
+		let numClasses=$numClasses+1
+	done
 }
 
-function difference {
-	difference=$[$nextTime-$time]
-	remainingMin=$[difference % 60]
-	if [ ${#remainingMin} = 1 ]; then
-		remainingMin=0$remainingMin
-	fi
-	remainingHour=$[difference / 60]
-	echo $remainingHour':'$remainingMin
+function orgArray {
+	counter=0
+	while [ $counter -lt $numClasses ]; do
+		remainder=$[counter % 3]
+		classNum=$[counter / 3]
+		if [ $remainder -eq 0 ]; then #time
+			time[$classNum]=${class[$counter]}
+			time[$classNum]=$(convertTime ${time[$classNum]})
+		elif [ $remainder -eq 1 ]; then #name
+			name[$classNum]=${class[$counter]}
+		elif [ $remainder -eq 2 ]; then #room
+			room[$classNum]=${class[$counter]}
+		fi
+		let counter=$counter+1
+	done
 }
-nextClass
-difference
+
+function convertTime {
+	input=$1
+	if [ ${#input} -lt 1 ]; then
+		input=$(currentTime)
+	fi
+	hours=${input%:??}
+	minutes=${input#??:}
+	time=$[10#$hours*60+10#$minutes]
+	echo $time
+}
+
+function currentTime {
+	date="$(date)"
+	tmp=${date%:??' EST'*}
+	len=${#tmp}
+	time=${tmp:len-6}
+	echo $time
+}
+
+function getAscendingTime {
+	counter=1
+	while [ $counter -le $[classNum] ]; do
+		previous=$[counter-1]
+		while [ ${time[$previous]} -gt ${time[$counter]} ]; do
+			let time[$counter]=${time[$counter]}+1440
+		done
+		let counter=$counter+1
+	done
+}
+
+function getTime {
+	time=$(convertTime)
+	date="$(date)"
+	counter=0
+	for i in Mon Tue Wed Thu Fri Sat Sun; do
+		if [ ${date::3} = $i ]; then
+			let time=$time+1440*$counter
+		fi
+		let counter=$counter+1
+	done
+	echo $time
+}
+
+function getDifference {
+	counter=0
+	while [ $counter -le $[classNum] ]; do
+		if [ $(getTime) -lt ${time[$counter]} ]; then
+			#echo ${name[$counter]}
+			echo $[${time[$counter]}-$(getTime)]
+			return
+		fi
+		let counter=$counter+1
+	done
+}
+
+function main {
+	makeArray
+	orgArray
+	getAscendingTime 
+	difference=$(getDifference)
+	echo $[difference/60]:$[difference%60] 
+}
+
+main

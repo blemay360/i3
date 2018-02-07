@@ -40,6 +40,8 @@ floating_modifier Mod4
 #not really a custom keybinding, but for gaps
 for_window [class="^.*"] border pixel 0
 
+bindsym XF86Reload exec xdotool key ctrl+r
+
 #open thunar
 bindsym Mod4+z exec thunar
 #open firefox

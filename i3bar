@@ -15,11 +15,11 @@ echo '[],'
 	red="#ff0000"
 	
 function loadips {
-	LOCALIP=$(ifconfig wlp1s0 | grep "inet addr")
+	LOCALIP=$(command ifconfig wlp1s0 | grep "inet addr")
 	LOCALIP=${LOCALIP%%B*0}
 	LEN=${#LOCALIP}
 	LOCALIP=${LOCALIP:20:$LEN-22}
-	IP=$(wget -qO- http://ipecho.net/plain ; echo)
+	IP=$(command wget -qO- http://ipecho.net/plain ; echo)
 }
 
 function print {
@@ -46,7 +46,7 @@ function hexcolor {
 function batstat {
 	green="#00ff00"
 	red="#ff0000"
-	BATSTAT=$(upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state")
+	BATSTAT=$(command upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state")
 	BATSTAT=${BATSTAT:25}
 	if [ $BATSTAT = "discharging" ] && [ $bat -le 15 ]; then
 		print "Discharging" $red
@@ -61,7 +61,7 @@ function batstat {
 }
 
 function batperc {
-	BATPERC=$(upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "percentage")
+	BATPERC=$(command upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "percentage")
 	BATPERC=${BATPERC:24}
 	bat=${BATPERC::-1}
 	hexcolor $bat
@@ -69,7 +69,7 @@ function batperc {
 }
 
 function network {
-	NETWORK="$(iwconfig wlp1s0 | grep ESSID:"*")"
+	NETWORK="$(command iwconfig wlp1s0 | grep ESSID:"*")"
 	NETWORK=${NETWORK:30:-3}
 	print "$NETWORK" $white
 }
@@ -77,8 +77,8 @@ function network {
 function vpn {
 #queries TUN0 to see if a vpn is enabled. If it is, it will give a whole message, otherwise it will give a short error
 #NOTE: should probably change so the error message won't go with the JSON stuff
-	TUN0=$(ifconfig tun0)
-	if [ ${#TUN0} -gt 100 ]; then
+	TUN0=$(command ifconfig -a)
+	if [ ${#TUN0} -gt 1400 ]; then
 		echo {'"full_text":"VPN","color":"'$green'"'},
 	fi
 }
@@ -91,7 +91,7 @@ function ipaddrs {
 
 function printdate {
 #retrieves date and prints it out. Only called print date because calling it date made it recursive and crashed stuff
-	DATE=$(date)
+	DATE=$(command date)
 	DATE=${DATE::-9}
 	DATE='"'$DATE'"'
 	echo '{"full_text":'$DATE'}],'
