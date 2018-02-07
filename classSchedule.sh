@@ -70,23 +70,62 @@ function getTime {
 	echo $time
 }
 
-function getDifference {
+function getNextClass {
 	counter=0
 	while [ $counter -le $[classNum] ]; do
-		if [ $(getTime) -lt ${time[$counter]} ]; then
-			echo $[${time[$counter]}-$(getTime)]
+		if [ $(getTime) -lt ${time[$counter]} ]; then	
+			nextClass=$counter
+			echo $nextClass
 			return
 		fi
 		let counter=$counter+1
 	done
 }
 
+function getDifference {
+	counter=0
+	while [ $counter -le $[classNum] ]; do
+		if [ $(getTime) -lt ${time[$counter]} ]; then
+			echo $[${time[$counter]}-$(getTime)]
+			nextClass=$counter
+			return
+		fi
+		let counter=$counter+1
+	done
+}
+
+function output {
+	difference=$(getDifference)
+	hour=$[difference/60]
+	minute=$[difference%60]
+	if [ ${#minute} -eq 1 ]; then
+		let minute=0$minute
+	elif [ ${#minute} -eq 0 ]; then
+		let minute=00
+	fi
+	echo $hour:$minute
+}
+
+function sendNotification {
+	seconds=$(date)
+	seconds=${seconds##*:}
+	seconds=${seconds::2}
+	nextClass=$(getnextClass)
+	if [ $difference = 90 ] && [ $seconds = 00 ]; then
+		notify-send --urgency=low --expire-time=30000 "${name[$nextClass]} in an hour and a half" "Room ${room[$nextClass]}"
+	elif [ $difference = 60 ] && [ $seconds = 00 ]; then
+		notify-send --urgency=low --expire-time=30000 "${name[$nextClass]} in an hour" "Room ${room[$nextClass]}"
+	elif [ $difference = 30 ] && [ $seconds = 00 ]; then
+		notify-send --urgency=low --expire-time=30000 "${name[$nextClass]} in a half hour" "Room ${room[$nextClass]}"
+	fi
+}
+
 function main {
 	makeArray
 	orgArray
 	getAscendingTime 
-	difference=$(getDifference)
-	echo $[difference/60]:$[difference%60] 
+	output
+	sendNotification 
 }
 
 main
