@@ -23,7 +23,9 @@ function loadips {
 }
 
 function print {
-	echo '{"full_text":"'$1'","color":"'$2'"},'
+	message=$1
+	color=$2
+	echo '{"full_text":"'$message'","color":"'$color'"},'
 }
 
 function hexcolor {
@@ -98,18 +100,18 @@ function printdate {
 }
 
 function nextClass {
-	nextClass=$(./.i3/classSchedule.sh)
+	nextClass=$(./bin/classSchedule/classSchedule.sh)
 	print $nextClass $white
 }
 
 function main {	
 	echo "["
-	nextClass
 	batperc
 	batstat
 	network
 	ipaddrs
 	vpn
+	nextClass
 	printdate
 	if [ $COUNTER -ge 500 ]; then
 		loadips
