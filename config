@@ -40,10 +40,14 @@ floating_modifier Mod4
 #not really a custom keybinding, but for gaps
 for_window [class="^.*"] border pixel 0
 
+#For reloading firefox with the reload button. It works sometimes
 bindsym XF86Reload exec xdotool key ctrl+r
 
+#Initiates automated scripts to start vpnbook
+bindsym Mod4+shift+v exec "xfce4-terminal -x ./bin/vpnbook/getPass.sh"
+
 #open thunar
-bindsym Mod4+z exec thunar
+bindsym Mod4+ctrl+z exec thunar
 #open firefox
 bindsym Mod4+f exec firefox
 
@@ -138,7 +142,7 @@ bindsym Mod4+space focus mode_toggle
 bindsym Mod4+a focus parent
 
 # focus the child container
-#bindsym Mod4+z focus child
+bindsym Mod4+z focus child
 
 # move the currently focused window to the scratchpad
 bindsym Mod4+Shift+minus move scratchpad

@@ -13,7 +13,8 @@ echo '[],'
 	white="#ffffff"
 	green="#00ff00"
 	red="#ff0000"
-	
+	firstRunVPN=0 #we're just going to assume we are connected to a vpn until told otherwise
+
 function loadips {
 	LOCALIP=$(command ifconfig wlp1s0 | grep "inet addr")
 	LOCALIP=${LOCALIP%%B*0}
@@ -78,15 +79,21 @@ function network {
 
 function vpn {
 #queries TUN0 to see if a vpn is enabled. If it is, it will give a whole message, otherwise it will give a short error
-#NOTE: should probably change so the error message won't go with the JSON stuff
 	TUN0=$(command ifconfig -a)
 	if [ ${#TUN0} -gt 1400 ]; then
+		if [ "$firstRunVPN" -eq 0 ]; then
+			loadips
+			let firstRunVPN=1
+		fi
 		echo {'"full_text":"VPN","color":"'$green'"'},
+	elif [ "$firstRunVPN" -eq 1 ]; then
+			loadips
+			let firstRunVPN=0
 	fi
 }
 
 function ipaddrs {
-#only prints out local and global? ip address. Not sure if global is right word, but whatever
+#only prints out local and public ip address
 	print $LOCALIP $white
 	print $IP $white
 }
@@ -100,12 +107,13 @@ function printdate {
 }
 
 function nextClass {
-	nextClass=$(./bin/classSchedule/classSchedule.sh)
+	nextClass=$(bash ~/bin/classSchedule/classSchedule.sh)
 	print $nextClass $white
 }
 
 function main {	
 	echo "["
+#	print "Houston, be advised: Rich Purnell is a steely-eyed missile man" $white
 	batperc
 	batstat
 	network
