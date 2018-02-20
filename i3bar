@@ -15,12 +15,13 @@ echo '[],'
 	red="#ff0000"
 	firstRunVPN=0 #we're just going to assume we are connected to a vpn until told otherwise
 
-function loadips {
+function refreshCache {
 	LOCALIP=$(command ifconfig wlp1s0 | grep "inet addr")
 	LOCALIP=${LOCALIP%%B*0}
 	LEN=${#LOCALIP}
 	LOCALIP=${LOCALIP:20:$LEN-22}
 	IP=$(command wget -qO- http://ipecho.net/plain ; echo)
+	localTemp=$(wget -q -O- "https://www.accuweather.com/en/us/new-york-ny/10017/weather-forecast/349727" | awk -F\' '/acm_RecentLocationsCarousel\.push/{print $12 }'| head -1)
 }
 
 function print {
@@ -82,12 +83,12 @@ function vpn {
 	TUN0=$(command ifconfig -a)
 	if [ ${#TUN0} -gt 1400 ]; then
 		if [ "$firstRunVPN" -eq 0 ]; then
-			loadips
+			refreshCache
 			let firstRunVPN=1
 		fi
 		echo {'"full_text":"VPN","color":"'$green'"'},
 	elif [ "$firstRunVPN" -eq 1 ]; then
-			loadips
+			refreshCache
 			let firstRunVPN=0
 	fi
 }
@@ -107,15 +108,21 @@ function printdate {
 }
 
 function nextClass {
-	nextClass=$(bash ~/bin/classSchedule/classSchedule.sh)
-	print $nextClass $white
+	nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
+	if [ $nextClass != "" ]; then
+		print $nextClass $white
+	fi
 }
 
 function toDo {
-	filename="toDo.txt"
+	filename="/home/blemay360/upcoming.txt"
 	while read -r line || [[ -n "$line" ]]; do
     		print "$line" $white
 	done < $filename	
+}
+
+function localTemp {
+	print $localTemp $white
 }
 
 function main {	
@@ -127,10 +134,11 @@ function main {
 	network
 	ipaddrs
 	vpn
+	localTemp	
 	nextClass
 	printdate
 	if [ $COUNTER -ge 500 ]; then
-		loadips
+		refreshCache
 		let COUNTER=0
 	fi
 	let COUNTER=COUNTER+1
@@ -138,5 +146,5 @@ function main {
 }
 
 COUNTER=0
-loadips
+refreshCache
 main
