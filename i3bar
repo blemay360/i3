@@ -9,45 +9,9 @@ echo '['
 # We send an empty first array of blocks to make the loop simpler:
 echo '[],'
 
-# Now send blocks with information forever:
-function setup {
-	white="#ffffff"
-	green="#00ff00"
-	red="#ff0000"
-	firstRunVPN=0 #we're just going to assume we are connected to a vpn until told otherwise
-	prevNetwork='null' #just a blank name since I'm lazy and if this isn't here it'll spit out an error
-	getCache
-}
-
-function refreshCache {
-	time=$(command date +%s)
-	if [ $((time % 60)) -eq 0 ]; then
-		getCache
-	fi
-}
-
-function getCache {
-	localTemp=$(wget -q -O- "https://www.accuweather.com/en/us/new-york-ny/10017/weather-forecast/349727" | awk -F\' '/acm_RecentLocationsCarousel\.push/{print $12 }'| head -1)
-	nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
-}
-
-function getIPs {
-	LOCALIP=$(command ifconfig wlp1s0 | grep "inet addr")
-	LOCALIP=${LOCALIP%%B*0}
-	LEN=${#LOCALIP}
-	LOCALIP=${LOCALIP:20:$LEN-22}
-	IP=$(command wget -qO- http://ipecho.net/plain ; echo)
-}
-
-function print {
-	message=$1
-	color=$2
-	echo '{"full_text":"'$message'","color":"'$color'"},'
-}
-
+#Some functions to make displaying stuff easier
 function hexcolor {
 	bat=$1
-#       python -c 'print int(round('$red', 0)), int(round('$green', 0))'
         red=$(echo 255-$bat*2.55 | bc)
         green=$(echo $bat*2.55 | bc)
         green=$(echo "obase=16; ${green%.*}" | bc)
@@ -59,9 +23,62 @@ function hexcolor {
                 green="0"$green
 	fi
         hexcolor="#"$red$green"00"
-#       echo $red $green
 }
 
+function print {
+	message=$1
+	color=$2
+	echo '{"full_text":"'$message'","color":"'$color'"},'
+}
+
+# Now for the good part that sends blocks with information forever:
+#Some functions to setup and get info we don't want to be constantly be asking for
+function setup {
+	white="#ffffff"
+	green="#00ff00"
+	red="#ff0000"
+	firstRunVPN=0 #we're just going to assume we are connected to a vpn until told otherwise
+	prevNetwork='null' #just a blank name since I'm lazy and if this isn't here it'll spit out an error
+	getCache
+}
+
+function getCache {
+	localTemp=$(wget -q -O- "https://www.accuweather.com/en/us/new-york-ny/10017/weather-forecast/349727" | awk -F\' '/acm_RecentLocationsCarousel\.push/{print $12 }'| head -1)
+	nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
+}
+
+function refreshCache {
+	time=$(command date +%s)
+	if [ $((time % 60)) -eq 0 ]; then
+		getCache
+	fi
+}
+
+function getIPs {
+	LOCALIP=$(command ifconfig wlp1s0 | grep "inet addr")
+	LOCALIP=${LOCALIP%%B*0}
+	LEN=${#LOCALIP}
+	LOCALIP=${LOCALIP:20:$LEN-22}
+	IP=$(command wget -qO- http://ipecho.net/plain ; echo)
+}
+
+#prints whatever is in my to do list
+function toDo {
+	filename="/home/blemay360/upcoming.txt"
+	while read -r line || [[ -n "$line" ]]; do
+    		print "$line" $white
+	done < $filename	
+}
+
+function batperc {
+	BATPERC=$(command upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "percentage")
+	BATPERC=${BATPERC:24}
+	bat=${BATPERC::-1}
+	hexcolor $bat
+	print $BATPERC $hexcolor
+}
+
+#functions for retreiving the battery status
 function batstat {
 	green="#00ff00"
 	red="#ff0000"
@@ -76,17 +93,9 @@ function batstat {
 	elif [ $BATSTAT = "fully-charged" ]; then
 		print "Charged" $green 
 	fi
-	
 }
 
-function batperc {
-	BATPERC=$(command upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "percentage")
-	BATPERC=${BATPERC:24}
-	bat=${BATPERC::-1}
-	hexcolor $bat
-	print $BATPERC $hexcolor
-}
-
+#some functions for what's going on with the wifi connection
 function network {
 	NETWORK="$(command iwconfig wlp1s0 | grep ESSID:"*")"
 	NETWORK=${NETWORK:30:-3}
@@ -96,6 +105,12 @@ function network {
 		getIPs
 	fi
 	prevNetwork="$NETWORK"
+}
+
+function printIPaddrs {
+#only prints out local and public ip address
+	print $LOCALIP $white
+	print $IP $white
 }
 
 function vpn {
@@ -113,51 +128,44 @@ function vpn {
 	fi
 }
 
-function ipaddrs {
-#only prints out local and public ip address
-	print $LOCALIP $white
-	print $IP $white
+#prints out the temp in New York
+function localTemp {
+	print $localTemp $white
 }
 
-function printdate {
-#retrieves date and prints it out. Only called print date because calling it date made it recursive and crashed stuff
-	DATE=$(command date)
-	DATE=${DATE::-9}
-	DATE='"'$DATE'"'
-	echo '{"full_text":'$DATE'}],'
-}
-
+#prints the time until next class
 function nextClass {
 	if [ $nextClass != "" ]; then
 		print $nextClass $white
 	fi
 }
 
-function toDo {
-	filename="/home/blemay360/upcoming.txt"
-	while read -r line || [[ -n "$line" ]]; do
-    		print "$line" $white
-	done < $filename	
-}
 
-function localTemp {
-	print $localTemp $white
+#Prints date and time
+function printdate {
+#retrieves date and prints it out. Only called print date because calling it date made it recursive and crashed stuff
+	DATE=$(command date)
+	DATE=${DATE::-9}
+	DATE=$DATE
+#	echo '{"full_text":'$DATE'}],'
+	print "$DATE" $white
 }
 
 function main {	
-	echo "["
-#	print "Houston, be advised: Rich Purnell is a steely-eyed missile man" $white
+	echo "[" #starts package
 	refreshCache
 	toDo
 	batperc
 	batstat
 	network
-	ipaddrs
+	printIPaddrs
 	vpn
 	localTemp	
 	nextClass
 	printdate
-	main
+	echo '{"full_text":""}],' #ends package
+	main #iterates to send the next package
 }
+
 setup
 main
