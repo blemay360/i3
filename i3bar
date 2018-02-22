@@ -10,18 +10,33 @@ echo '['
 echo '[],'
 
 # Now send blocks with information forever:
+function setup {
 	white="#ffffff"
 	green="#00ff00"
 	red="#ff0000"
 	firstRunVPN=0 #we're just going to assume we are connected to a vpn until told otherwise
+	prevNetwork='null' #just a blank name since I'm lazy and if this isn't here it'll spit out an error
+	getCache
+}
 
 function refreshCache {
+	time=$(command date +%s)
+	if [ $((time % 60)) -eq 0 ]; then
+		getCache
+	fi
+}
+
+function getCache {
+	localTemp=$(wget -q -O- "https://www.accuweather.com/en/us/new-york-ny/10017/weather-forecast/349727" | awk -F\' '/acm_RecentLocationsCarousel\.push/{print $12 }'| head -1)
+	nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
+}
+
+function getIPs {
 	LOCALIP=$(command ifconfig wlp1s0 | grep "inet addr")
 	LOCALIP=${LOCALIP%%B*0}
 	LEN=${#LOCALIP}
 	LOCALIP=${LOCALIP:20:$LEN-22}
 	IP=$(command wget -qO- http://ipecho.net/plain ; echo)
-	localTemp=$(wget -q -O- "https://www.accuweather.com/en/us/new-york-ny/10017/weather-forecast/349727" | awk -F\' '/acm_RecentLocationsCarousel\.push/{print $12 }'| head -1)
 }
 
 function print {
@@ -76,6 +91,11 @@ function network {
 	NETWORK="$(command iwconfig wlp1s0 | grep ESSID:"*")"
 	NETWORK=${NETWORK:30:-3}
 	print "$NETWORK" $white
+	if [ "$prevNetwork" != "$NETWORK" ]; then
+		sleep 3
+		getIPs
+	fi
+	prevNetwork="$NETWORK"
 }
 
 function vpn {
@@ -108,7 +128,6 @@ function printdate {
 }
 
 function nextClass {
-	nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
 	if [ $nextClass != "" ]; then
 		print $nextClass $white
 	fi
@@ -128,6 +147,7 @@ function localTemp {
 function main {	
 	echo "["
 #	print "Houston, be advised: Rich Purnell is a steely-eyed missile man" $white
+	refreshCache
 	toDo
 	batperc
 	batstat
@@ -137,14 +157,7 @@ function main {
 	localTemp	
 	nextClass
 	printdate
-	if [ $COUNTER -ge 500 ]; then
-		refreshCache
-		let COUNTER=0
-	fi
-	let COUNTER=COUNTER+1
 	main
 }
-
-COUNTER=0
-refreshCache
+setup
 main
