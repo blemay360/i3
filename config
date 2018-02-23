@@ -58,16 +58,16 @@ bindsym Mod4+shift+r exec firefox -new-tab www.reddit.com
 bindsym Mod4+shift+s exec spotify
 
 #open chrome
-bindsym Mod4+c exec google-chrome-stable
+#bindsym Mod4+c exec google-chrome-stable
 
 #open Netflix
-bindsym Mod4+shift+n exec "google-chrome-stable --app=https://www.netflix.com"
+bindsym Mod4+shift+n exec "firefox -new-window https://www.netflix.com"
 
 #open Hulu
-bindsym Mod4+shift+u exec google-chrome-stable --app=https://www.hulu.com
+bindsym Mod4+shift+u exec "firefox -new-window https://www.hulu.com"
 
 #open Amazon video
-bindsym Mod4+shift+a exec google-chrome-stable --app=https://www.amazon.com/stream/ref=nav_upnav_LargeImage_C_Browse
+bindsym Mod4+shift+a exec "firefox -new-window https://www.amazon.com/stream/ref=nav_upnav_LargeImage_C_Browse"
 
 #next song for spotify
 #bindsym ctrl+right exec "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next"
