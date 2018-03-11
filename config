@@ -37,8 +37,17 @@ floating_modifier Mod4
 ###START OF CUSTOM KEYBINDINGS###
 #################################################################
 
+#bindsym 6 exec xdotool key F6
+
 #not really a custom keybinding, but for gaps
 for_window [class="^.*"] border pixel 0
+
+#For mapping vim keys to arrow keys
+#bindsym 0x006a exec xdotool key j
+
+#Redshift commands
+bindsym Mod4+XF86MonBrightnessDown exec "redshift -O 1800"
+bindsym Mod4+XF86MonBrightnessUp exec "redshift -x"
 
 #For reloading firefox with the reload button. It works sometimes
 bindsym XF86Reload exec xdotool key ctrl+r
@@ -54,6 +63,9 @@ bindsym Mod4+f exec firefox
 #open reddit in firefox
 bindsym Mod4+shift+r exec firefox -new-tab www.reddit.com
 
+#open email in firefox
+bindsym Mod4+shift+g exec firefox -new-tab www.gmail.com
+
 #open spotify
 bindsym Mod4+shift+s exec spotify
 
@@ -67,8 +79,10 @@ bindsym Mod4+shift+n exec "firefox -new-window https://www.netflix.com"
 bindsym Mod4+shift+u exec "firefox -new-window https://www.hulu.com"
 
 #open Amazon video
-bindsym Mod4+shift+a exec "firefox -new-window https://www.amazon.com/stream/ref=nav_upnav_LargeImage_C_Browse"
+#bindsym Mod4+shift+a exec "firefox -new-window https://www.amazon.com/stream/ref=nav_upnav_LargeImage_C_Browse"
 
+#open Arduino IDE
+bindsym Mod4+shift+a exec "./arduino-1.8.5/arduino"
 #next song for spotify
 #bindsym ctrl+right exec "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next"
 
@@ -212,7 +226,7 @@ bindsym Mod4+r mode "resize"
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
 bar {
-        status_command $HOME/.i3/i3bar
+        status_command $HOME/.i3/i3bar-start
 	separator_symbol "|"
 	colors {
 		background #323e4a

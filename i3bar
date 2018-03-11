@@ -43,7 +43,7 @@ function setup {
 }
 
 function getCache {
-	localTemp=$(wget -q -O- "https://www.accuweather.com/en/us/new-york-ny/10017/weather-forecast/349727" | awk -F\' '/acm_RecentLocationsCarousel\.push/{print $12 }'| head -1)
+#	localTemp=$(wget -q -O- "https://www.accuweather.com/en/us/new-york-ny/10017/weather-forecast/349727" | awk -F\' '/acm_RecentLocationsCarousel\.push/{print $12 }'| head -1)
 	nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
 }
 
@@ -66,7 +66,9 @@ function getIPs {
 function toDo {
 	filename="/home/blemay360/upcoming.txt"
 	while read -r line || [[ -n "$line" ]]; do
-    		print "$line" $white
+		if [ ${line:0:1} != "#" ]; then
+    			print "$line" $white
+		fi
 	done < $filename	
 }
 
@@ -116,7 +118,7 @@ function printIPaddrs {
 function vpn {
 #queries TUN0 to see if a vpn is enabled. If it is, it will give a whole message, otherwise it will give a short error
 	TUN0=$(command ifconfig -a)
-	if [ ${#TUN0} -gt 1400 ]; then
+	if [ ${#TUN0} -gt 1200 ]; then
 		if [ "$firstRunVPN" -eq 0 ]; then
 			refreshCache
 			let firstRunVPN=1
@@ -143,7 +145,7 @@ function nextClass {
 
 #Prints date and time
 function printdate {
-#retrieves date and prints it out. Only called print date because calling it date made it recursive and crashed stuff
+#retrieves date and prints it out. Only called printdate because calling it date made it recursive and crashed stuff
 	DATE=$(command date)
 	DATE=${DATE::-9}
 	DATE=$DATE
@@ -152,19 +154,19 @@ function printdate {
 }
 
 function main {	
-	echo "[" #starts package
+	echo "[" #starts packet
 	refreshCache
 	toDo
 	batperc
 	batstat
 	network
-	printIPaddrs
+#	printIPaddrs
 	vpn
-	localTemp	
-	nextClass
+#	localTemp
+#	nextClass
 	printdate
-	echo '{"full_text":""}],' #ends package
-	main #iterates to send the next package
+	echo '{"full_text":""}],' #ends packet
+	main #iterates to send the next packet
 }
 
 setup

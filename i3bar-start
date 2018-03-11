@@ -1,0 +1,7 @@
+#!/bin/bash
+while true; do
+	until ./.i3/i3bar; do
+		notify-send "i3bar crashed" $(pwd)
+		sleep 1
+	done
+done
