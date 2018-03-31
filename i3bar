@@ -163,7 +163,7 @@ function main {
 #	printIPaddrs
 	vpn
 #	localTemp
-#	nextClass
+	nextClass
 	printdate
 	echo '{"full_text":""}],' #ends packet
 	main #iterates to send the next packet
