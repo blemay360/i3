@@ -1,14 +1,4 @@
 #!/bin/bash
-
-# Send the header so that i3bar knows we want to use JSON:
-echo '{"version":1}'
-
-# Begin the endless array.
-echo '['
-
-# We send an empty first array of blocks to make the loop simpler:
-echo '[],'
-
 #Some functions to make displaying stuff easier
 function hexcolor {
 	bat=$1
@@ -31,27 +21,13 @@ function print {
 	echo '{"full_text":"'$message'","color":"'$color'"},'
 }
 
-# Now for the good part that sends blocks with information forever:
 #Some functions to setup and get info we don't want to be constantly be asking for
 function setup {
 	white="#ffffff"
 	green="#00ff00"
 	red="#ff0000"
-	firstRunVPN=0 #we're just going to assume we are connected to a vpn until told otherwise
-	prevNetwork='null' #just a blank name since I'm lazy and if this isn't here it'll spit out an error
-	getCache
-}
-
-function getCache {
-#	localTemp=$(wget -q -O- "https://www.accuweather.com/en/us/new-york-ny/10017/weather-forecast/349727" | awk -F\' '/acm_RecentLocationsCarousel\.push/{print $12 }'| head -1)
 	nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
-}
-
-function refreshCache {
-	time=$(command date +%s)
-	if [ $((time % 60)) -eq 0 ]; then
-		getCache
-	fi
+	firstRunVPN=0 #we're just going to assume we are connected to a vpn until told otherwise
 }
 
 function getIPs {
@@ -66,7 +42,7 @@ function getIPs {
 function toDo {
 	filename="/home/blemay360/upcoming.txt"
 	while read -r line || [[ -n "$line" ]]; do
-		if [ ${line:0:1} != "#" ]; then
+		if [ "${line:0:1}" != "#" ] && [ "$line" != "" ]; then
     			print "$line" $white
 		fi
 	done < $filename	
@@ -102,67 +78,56 @@ function network {
 	NETWORK="$(command iwconfig wlp1s0 | grep ESSID:"*")"
 	NETWORK=${NETWORK:30:-3}
 	print "$NETWORK" $white
-	if [ "$prevNetwork" != "$NETWORK" ]; then
-		sleep 3
-		getIPs
-	fi
-	prevNetwork="$NETWORK"
+#	if [ "$prevNetwork" != "$NETWORK" ]; then
+#		sleep 3
+#		getIPs
+#	fi
+#	prevNetwork="$NETWORK"
 }
 
-function printIPaddrs {
+#function printIPaddrs {
 #only prints out local and public ip address
-	print $LOCALIP $white
-	print $IP $white
-}
+#	print $LOCALIP $white
+#	print $IP $white
+#}
 
 function vpn {
 #queries TUN0 to see if a vpn is enabled. If it is, it will give a whole message, otherwise it will give a short error
 	TUN0=$(command ifconfig -a)
 	if [ ${#TUN0} -gt 1200 ]; then
 		if [ "$firstRunVPN" -eq 0 ]; then
-			refreshCache
 			let firstRunVPN=1
 		fi
 		echo {'"full_text":"VPN","color":"'$green'"'},
 	elif [ "$firstRunVPN" -eq 1 ]; then
-			refreshCache
 			let firstRunVPN=0
 	fi
 }
 
-#prints out the temp in New York
-function localTemp {
-	print $localTemp $white
-}
-
 #prints the time until next class
 function nextClass {
-	if [ $nextClass != "" ]; then
+	if [ $(date "+%S") -eq 0 ]; then
+		nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
+	fi
+	if [ "$nextClass" != "" ]; then
 		print $nextClass $white
 	fi
 }
 
-
 #Prints date and time
 function printdate {
 #retrieves date and prints it out. Only called printdate because calling it date made it recursive and crashed stuff
-	DATE=$(command date)
-	DATE=${DATE::-9}
-	DATE=$DATE
-#	echo '{"full_text":'$DATE'}],'
-	print "$DATE" $white
+	print "$(command date "+%a %b %d")" $white
+	print $(command date "+%H:%M:%S") $white
 }
 
 function main {	
 	echo "[" #starts packet
-	refreshCache
 	toDo
 	batperc
 	batstat
 	network
-#	printIPaddrs
 	vpn
-#	localTemp
 	nextClass
 	printdate
 	echo '{"full_text":""}],' #ends packet

@@ -46,7 +46,7 @@ for_window [class="^.*"] border pixel 0
 #bindsym 0x006a exec xdotool key j
 
 #Redshift commands
-bindsym Mod4+XF86MonBrightnessDown exec "redshift -O 1800"
+bindsym Mod4+XF86MonBrightnessDown exec "redshift -O 2800"
 bindsym Mod4+XF86MonBrightnessUp exec "redshift -x"
 
 #For reloading firefox with the reload button. It works sometimes
