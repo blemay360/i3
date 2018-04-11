@@ -41,9 +41,18 @@ function getIPs {
 #prints whatever is in my to do list
 function toDo {
 	filename="/home/blemay360/upcoming.txt"
+	comment=0
 	while read -r line || [[ -n "$line" ]]; do
-		if [ "${line:0:1}" != "#" ] && [ "$line" != "" ]; then
-    			print "$line" $white
+		if [ "${line:0:2}" != "//" ] && [ "$line" != "" ]; then
+			if [ "${line:0:1}" = "!" ]; then
+				print "${line:1}" $red
+			elif [ "${line:0:2}" = "/*" ]; then
+				let comment=1
+			elif [ "${line:0:2}" = "*/" ]; then
+				let comment=0
+			elif [ $comment -eq 0 ]; then
+	    			print "$line" $white
+			fi
 		fi
 	done < $filename	
 }
@@ -106,8 +115,12 @@ function vpn {
 
 #prints the time until next class
 function nextClass {
-	if [ $(date "+%S") -eq 0 ]; then
+	if [ "$last_run" = "" ]; then
 		nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
+		lastrun="$(command date "+%M")"
+	elif [ "$last_run" != $(command date "+%M") ]; then
+		nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
+		lastrun="$(command date "+%M")"
 	fi
 	if [ "$nextClass" != "" ]; then
 		print $nextClass $white
