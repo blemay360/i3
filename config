@@ -82,7 +82,7 @@ bindsym Mod4+shift+u exec "firefox -new-window https://www.hulu.com"
 #bindsym Mod4+shift+a exec "firefox -new-window https://www.amazon.com/stream/ref=nav_upnav_LargeImage_C_Browse"
 
 #open Arduino IDE
-bindsym Mod4+shift+a exec "./arduino-1.8.5/arduino"
+bindsym Mod4+shift+a exec "xfce4-terminal -e='./bin/keyboard/keyboard.sh a'"
 #next song for spotify
 #bindsym ctrl+right exec "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next"
 
