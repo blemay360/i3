@@ -72,6 +72,9 @@ bindsym Mod4+shift+s exec spotify
 #open chrome
 #bindsym Mod4+c exec google-chrome-stable
 
+#open EagleCAD
+bindsym Mod4+c exec ~/Downloads/eagle-8.5.2/eagle
+
 #open Netflix
 bindsym Mod4+shift+n exec "firefox -new-window https://www.netflix.com"
 
