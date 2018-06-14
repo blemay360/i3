@@ -1,0 +1,174 @@
+#!/bin/bash
+#Some functions to make displaying stuff easier
+function hexcolor {
+	bat=$1
+        red=$(echo 255-$bat*2.55 | bc)
+        green=$(echo $bat*2.55 | bc)
+        green=$(echo "obase=16; ${green%.*}" | bc)
+        red=$(echo "obase=16; ${red%.*}" | bc)
+        if [ ${#red} = 1 ]; then
+                red="0"$red
+        fi
+        if [ ${#green} = 1 ]; then
+                green="0"$green
+	fi
+        hexcolor="#"$red$green"00"
+}
+
+function print {
+	message=$1
+	color=$2
+	echo '{"full_text":"'$message'","color":"'$color'"},'
+}
+
+#Some functions to setup and get info we don't want to be constantly be asking for
+function setup {
+	white="#ffffff"
+	green="#00ff00"
+	red="#ff0000"
+	firstRunVPN=0 #we're just going to assume we are connected to a vpn until told otherwise
+}
+
+function getIPs {
+	LOCALIP=$(command ifconfig wlp1s0 | grep "inet addr")
+	LOCALIP=${LOCALIP%%B*0}
+	LEN=${#LOCALIP}
+	LOCALIP=${LOCALIP:20:$LEN-22}
+	IP=$(command wget -qO- http://ipecho.net/plain ; echo)
+}
+
+#prints whatever is in my to do list
+function toDo {
+	filename="/home/blemay360/upcoming.txt"
+	comment=0
+	notify=0
+	while read -r line || [[ -n "$line" ]]; do
+		if [ "${line:0:2}" != "//" ] && [ "$line" != "" ] && [ "${line:0:1}" != "#" ]; then
+			if [ "${line:0:12}" = "Notification" ]; then
+				notify=1
+				comment=1
+			elif [ $comment -eq 1 ]; then
+				notify=0
+			else
+				notify=0
+				comment=0
+			fi
+			if [ "${line:0:1}" = "!" ]; then
+				print "${line:1}" $red
+			elif [ "${line:0:2}" = "/*" ]; then
+				let comment=1
+			elif [ "${line:0:2}" = "*/" ]; then
+				let comment=0
+			elif [ $comment -eq 0 ]; then
+	    			print "$line" $white
+			fi
+		fi
+	done < $filename
+}
+
+toDo="Store each notification in ascending order of display time, so the first line will be displayed first, and the second second.. From there, the notify flag will be repurposed to work be the time. Then just check the notify flag time to display whatever is in the file"
+function depositNotification {
+	echo $1 >> notifications.txt
+}
+
+function printNotification {
+	notify-send $(head -n 1 notifications.txt)
+	$(sed '1d' notifications.txt) 
+}
+
+function batperc {
+	BATPERC=$(command upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "percentage")
+	BATPERC=${BATPERC:24}
+	bat=${BATPERC::-1}
+	hexcolor $bat
+	print $BATPERC $hexcolor
+}
+
+#functions for retreiving the battery status
+function batstat {
+	green="#00ff00"
+	red="#ff0000"
+	BATSTAT=$(command upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state")
+	BATSTAT=${BATSTAT:25}
+	if [ $BATSTAT = "discharging" ] && [ $bat -le 15 ]; then
+		print "Discharging" $red
+	elif [ $BATSTAT = "discharging" ]; then
+		print "Discharging" $white
+	elif [ $BATSTAT = "charging" ]; then
+		print "Charging" $green
+	elif [ $BATSTAT = "fully-charged" ]; then
+		print "Charged" $green 
+	fi
+}
+
+#some functions for what's going on with the wifi connection
+function network {
+	NETWORK="$(command iwconfig wlp1s0 | grep ESSID:"*")"
+	NETWORK=${NETWORK:30:-3}
+	if [ "$NETWORK" = "Bedly - 137 - 1R" ]; then
+		print "Apartment" $white
+	else
+		print "$NETWORK" $white
+	fi
+#	if [ "$prevNetwork" != "$NETWORK" ]; then
+#		sleep 3
+#		getIPs
+#	fi
+#	prevNetwork="$NETWORK"
+}
+
+#function printIPaddrs {
+#only prints out local and public ip address
+#	print $LOCALIP $white
+#	print $IP $white
+#}
+
+function vpn {
+#queries TUN0 to see if a vpn is enabled. If it is, it will give a whole message, otherwise it will give a short error
+	TUN0=$(command ifconfig -a)
+	if [ ${#TUN0} -gt 1200 ]; then
+		if [ "$firstRunVPN" -eq 0 ]; then
+			let firstRunVPN=1
+		fi
+		echo {'"full_text":"VPN","color":"'$green'"'},
+	elif [ "$firstRunVPN" -eq 1 ]; then
+			let firstRunVPN=0
+	fi
+}
+
+#prints the time until next class
+function nextClass {
+	if [ "$last_run" = "" ]; then
+		nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
+		lastrun="$(command date "+%M")"
+	elif [ "$last_run" != $(command date "+%M") ]; then
+		nextClass=$(bash /home/blemay360/bin/classSchedule/classSchedule.sh)
+		lastrun="$(command date "+%M")"
+	fi
+	if [ "$nextClass" != "" ]; then
+		print $nextClass $white
+	fi
+}
+
+#Prints date and time
+function printdate {
+#retrieves date and prints it out. Only called printdate because calling it date made it recursive and crashed stuff
+	print "$(command date "+%a %b %d")" $white
+	print $(command date "+%H:%M:%S") $white
+}
+
+function main {	
+	echo "[" #starts packet
+	toDo
+	batperc
+	batstat
+	network
+	vpn
+#	nextClass
+	printdate
+	echo '{"full_text":""}],' #ends packet
+	main #iterates to send the next packet
+}
+
+setup
+main
