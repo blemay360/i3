@@ -45,6 +45,9 @@ for_window [class="^.*"] border pixel 0
 #For mapping vim keys to arrow keys
 #bindsym 0x006a exec xdotool key j
 
+#Android messages
+bindsym Mod4+shift+m exec chromium-browser --app=https://messages.android.com
+
 #Redshift commands
 bindsym Mod4+XF86MonBrightnessDown exec "redshift -O 2800"
 bindsym Mod4+XF86MonBrightnessUp exec "redshift -x"
