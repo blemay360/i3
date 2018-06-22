@@ -89,14 +89,15 @@ bindsym Mod4+shift+u exec "firefox -new-window https://www.hulu.com"
 
 #open Arduino IDE
 bindsym Mod4+shift+a exec "xfce4-terminal -e='./bin/keyboard/keyboard.sh a'"
-#next song for spotify
-#bindsym ctrl+right exec "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next"
-
-#previous song for spotify
-#bindsym ctrl+left exec "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous"
 
 #play/pause song for spotify
-#bindsym ctrl+up exec "dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause"
+bindsym ctrl+Up exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause
+
+#previous song for spotify
+bindsym ctrl+Left exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
+
+#next song for spotify
+bindsym ctrl+Right exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
 
 ###########################################################################
 ###END OF CUSTOM KEYBINDINGS###
