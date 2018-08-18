@@ -99,6 +99,15 @@ bindsym ctrl+Left exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spo
 #next song for spotify
 bindsym ctrl+Right exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
 
+#Disable touchpad
+bindsym XF86Tools exec "bash /home/blemay360/bin-master/toggleKeyboardMouse/main"
+
+#Raise volume
+bindsym F9 exec "amixer -q -D pulse sset Master 5%-"
+
+#Lower volume
+bindsym F10 exec "amixer -q -D pulse sset Master 5%+"
+
 ###########################################################################
 ###END OF CUSTOM KEYBINDINGS###
 
